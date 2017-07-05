@@ -19,10 +19,12 @@ String dosversion = "v1.03";             // DroidOS version
 bool armed = false;                      // Is the Droid armed?
 String lastlog;                          // Last debug message for cloud
 String systemstatus;                     // System status for cloud
-int sound_threshold = 50;                // Percent before activating sound
+int systemstatus_change;                 // Time (in millis) since change
+const int sound_threshold = 50;          // Percent before activating sound
+bool show_changes = true;                // Show RC changes in console
 
 // Remote reset initiated by head & sound gimbals after timeout
-int reset_timeout = 5000;                // Start reset after value, in millis
+const int reset_timeout = 5000;          // Start reset after value, in millis
 bool is_resetting = false;               // Is the Droid resetting?
 int reset_start;                         // Time (in millis), since reset
 
@@ -34,7 +36,7 @@ int lastvalue;                           // Last value from MP3 player
 // Keep track of the status of the MP3 player, including the last song played
 // and the state of the player to avoid errors
 bool player_active = false;              // Is the MP3 player initialized
-int song_index[] = {0, 0};               // The index of the happy/sad songs
+int song_index[] = { 0, 0 };             // The index of the happy/sad songs
 bool is_playing = false;                 // Is the player playing music
 int is_playing_song = false;             // If playing, which music
 
@@ -64,7 +66,7 @@ void setup() {
   startplayer();
   if (player_active) {
     log("MP3 player initaliztion failed, resetting system.");
-    delay(1000);
+    delay(5000);
     System.reset();
   }
 
@@ -87,21 +89,9 @@ void setup() {
     && channels[gimbal_sound] == sbus_inactive_value) {
       log("SBUS initaliztion failed, resetting system.");
       play_notification(4);
+      delay(4000);
       System.reset();
   }
-
-  // Wait for the user to flip the arm switch all the way up //
-  while (channels[switch_mode] > -50) {
-    log("Arm switch actived.");
-    play_notification(2);
-    delay(7000);
-  }
-
-  // Wait for the user to flip the arm switch to the middle
-  while (channels[switch_mode] < -50 || channels[switch_mode] > 50) {
-    delay(100);
-  }
-
 }
 
 void loop() {
@@ -128,9 +118,8 @@ void loop() {
   if (armed) {
     // When system switch pushed to 3rd, position, announce & arm the cloud
     if (channels[switch_mode] > 50 && !Particle.connected()) {
-      log("Cloud switch activated.");
-      play_notification(5);
-      delay(3000);
+      log("Initiating communication system.");
+      play_notification(10);
       Particle.connect();
     }
 
@@ -166,6 +155,7 @@ void arm() {
 
 void disarm() {
   log("Droid disarmed.");
+  Cellular.off();
   play_notification(6);
   delay(2500);
   armed = false;
@@ -202,6 +192,7 @@ void startplayer() {
 }
 
 void update_status() {
+  String oldstatus = systemstatus;
   systemstatus = "L:" +
     String(channels[gimbal_leftdrive]) +
     "R:" +
@@ -220,6 +211,13 @@ void update_status() {
     systemstatus = systemstatus + "Y";
   else
     systemstatus = systemstatus + "N";
+
+  if (show_changes && (oldstatus != systemstatus)) {
+    if (millis() - systemstatus_change > 100 || systemstatus_change == 0) {
+      systemstatus_change = millis();
+      Serial.println(systemstatus);
+    }
+  }
 }
 
 int translate_volume() {
@@ -258,7 +256,6 @@ void play_happy() {
       song_index[0] = 1;
 
   log("Playing happy clip " + song_index[0]);
-  Serial.println(song_index[0]);
   mp3player.playFolder(1, song_index[0]);
 }
 
