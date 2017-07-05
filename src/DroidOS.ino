@@ -140,7 +140,6 @@ void arm() {
   play_notification(3);
   delay(2500);
   armed = true;
-
 }
 
 void disarm() {
