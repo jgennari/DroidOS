@@ -104,6 +104,7 @@ void loop() {
   // Initiate remote reset
   if (channels[gimbal_sound] < -50 && channels[gimbal_head] > 50) {
     if (!is_resetting) {
+      log("Restart sequence initiated.");
       is_resetting = true;
       reset_start = millis();
     } else if (is_resetting && millis() - reset_start > reset_timeout) {
@@ -178,7 +179,7 @@ int droid_reset(String extra) {
     play_notification(9);
   } else {
       log("Cloud reset initiated.");
-      play_notification(9);
+      play_notification(8);
   }
 
   delay(3000);
@@ -197,9 +198,7 @@ void startplayer() {
 
   log("Connecting DFPlayer serial:");
   if (!mp3player.begin(Serial1))  {
-      log("Unable to begin:");
-      log("  1.Please recheck the connection!");
-      log("  2.Please insert the SD card!");
+      log("DFPlayer Mini failed.");
   }
   else  {
       log("DFPlayer Mini online.");
@@ -221,13 +220,7 @@ void update_status() {
     "V:" +
     String(channels[rotary_volume]) +
     "M:" +
-    String(channels[switch_mode]) +
-    "P:";
-
-  if (player_active)
-    systemstatus = systemstatus + "Y";
-  else
-    systemstatus = systemstatus + "N";
+    String(channels[switch_mode]);
 
   if (show_changes && (oldstatus != systemstatus)) {
     if (millis() - systemstatus_change > 100 || systemstatus_change == 0) {
@@ -266,22 +259,26 @@ void update_sbus() {
 }
 
 void play_happy() {
-  is_playing = true;
   if (song_index[0] <= 20)
       song_index[0] = song_index[0] + 1;
   else
       song_index[0] = 1;
+
+  is_playing = true;
+  is_playing_song = song_index[0];
 
   log("Playing happy clip " + song_index[0]);
   mp3player.playFolder(1, song_index[0]);
 }
 
 void play_sad() {
-  is_playing = true;
   if (song_index[1] <= 20)
       song_index[1] = song_index[1] + 1;
   else
       song_index[1] = 1;
+
+  is_playing = true;
+  is_playing_song = song_index[1];
 
   log("Playing sad clip " + song_index[1]);
   mp3player.playFolder(2, song_index[1]);
@@ -333,7 +330,7 @@ void decode_mp3status(uint8_t type, int value) {
             mp3error = "Get Wrong Stack";
             break;
           case CheckSumNotMatch:
-            mp3error = "Check Sum Not Match";
+            mp3error = "Checksum Not Match";
             break;
           case FileIndexOut:
             mp3error = "File Index Out of Bound";
@@ -348,6 +345,7 @@ void decode_mp3status(uint8_t type, int value) {
             break;
         }
         log("DFPlayerError: " + mp3error);
+        delay(1000);
         mp3player.reset();
         break;
       default:
