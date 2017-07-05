@@ -107,7 +107,7 @@ void loop() {
       is_resetting = true;
       reset_start = millis();
     } else if (is_resetting && millis() - reset_start > reset_timeout) {
-      droid_reset("");
+      droid_reset("Local");
     }
   } else {
     is_resetting = false;
@@ -117,11 +117,10 @@ void loop() {
   // Only execute these options when armed
   if (armed) {
     // When system switch pushed to 3rd, position, announce & arm the cloud
-    if (channels[switch_mode] > 50 && !Particle.connected()) {
-      log("Initiating communication system.");
-      play_notification(10);
-      Particle.connect();
-    }
+    if (channels[switch_mode] > 50 && !Particle.connected())
+      connect();
+    else if (channels[switch_mode] < 50 && Particle.connected())
+      disconnect();
 
     // If not playing and ch4 pushed right, play happy
     if (!is_playing && channels[gimbal_sound] > sound_threshold)
@@ -155,15 +154,33 @@ void arm() {
 
 void disarm() {
   log("Droid disarmed.");
-  Cellular.off();
   play_notification(6);
+  disconnect();
   delay(2500);
   armed = false;
 }
 
+void disconnect() {
+  log("Disconnecting communication system.");
+  play_notification(11);
+  Cellular.off();
+}
+
+void connect() {
+  log("Initiating communication system.");
+  play_notification(10);
+  Particle.connect();
+}
+
 int droid_reset(String extra) {
-  log("Cloud reset initiated.");
-  play_notification(8);
+  if (extra == "Local") {
+    log("Local reset initiated.");
+    play_notification(9);
+  } else {
+      log("Cloud reset initiated.");
+      play_notification(9);
+  }
+
   delay(3000);
   System.reset();
   return 1;
