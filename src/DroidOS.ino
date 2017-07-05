@@ -20,13 +20,9 @@ bool armed = false;                      // Is the Droid armed?
 String lastlog;                          // Last debug message for cloud
 String systemstatus;                     // System status for cloud
 int systemstatus_change;                 // Time (in millis) since change
-const int sound_threshold = 50;          // Percent before activating sound
 bool show_changes = true;                // Show RC changes in console
-
-// Remote reset initiated by head & sound gimbals after timeout
 const int reset_timeout = 5000;          // Start reset after value, in millis
-bool is_resetting = false;               // Is the Droid resetting?
-int reset_start;                         // Time (in millis), since reset
+const int sound_threshold = 50;          // Percent before activating sound
 
 // Keep track of these next to values to filter out unnecessary status updates
 // The MP3 player will keep looping the last status
@@ -103,16 +99,9 @@ void loop() {
 
   // Initiate remote reset
   if (channels[gimbal_sound] < -50 && channels[gimbal_head] > 50) {
-    if (!is_resetting) {
-      log("Restart sequence initiated.");
-      is_resetting = true;
-      reset_start = millis();
-    } else if (is_resetting && millis() - reset_start > reset_timeout) {
+    delay(reset_timeout);
+    if (channels[gimbal_sound] < -50 && channels[gimbal_head] > 50)
       droid_reset("Local");
-    }
-  } else {
-    is_resetting = false;
-    reset_start = 0;
   }
 
   // Only execute these options when armed
@@ -142,7 +131,8 @@ void loop() {
   // Write a cloud variable with all the debug info
   update_status();
 
-  delay(200);
+  // Shouldn't need a delay
+  //delay(200);
 }
 
 void arm() {
