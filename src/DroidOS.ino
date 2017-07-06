@@ -54,7 +54,7 @@ void setup() {
   Serial.begin(115200);
 
   delay(7000);
-  log("Starting up ...");
+  log("DroidOS " + dosversion + " starting up ...");
 
   // Publish cloud variables and functions
   Particle.variable("systemstatus", systemstatus);
@@ -103,7 +103,7 @@ void setup() {
       int serialcontrol_start = millis();
       Serial.print("Press any key to use serial control ");
 
-      while(millis() - serialcontrol_start < 5000) {
+      while(millis() - serialcontrol_start < 3000) {
         if (Serial.available() > 0) {
           Serial.println("");
           log("Using serial control.");
@@ -118,11 +118,12 @@ void setup() {
         Serial.print(".");
 
         // Don't flood the console with .
-        delay(200);
+        delay(500);
       }
 
       // No one is on the terminal and the SBUS channels are empty
       if (use_sbus) {
+        Serial.println("");
         log("SBUS initaliztion failed, resetting system.");
         play_notification(4);
         delay(4000);
