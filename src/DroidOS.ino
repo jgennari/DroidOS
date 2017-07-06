@@ -12,7 +12,7 @@ SYSTEM_MODE(SEMI_AUTOMATIC);             // Managed cloud connection via switch
 
 DFRobotDFPlayerMini mp3player;           // Declare MP3 player_active
 SBUS x4r(Serial4);                       // Declare RC recv, assign to S4
-Timer sbus_timer(1, update_sbus);        // Create a 1ms timer, assign proc
+Timer controls_timer(1, controls_update);        // Create a 1ms timer, assign proc
 
 // System and cloud variables
 String dosversion = "v1.03";             // DroidOS version
@@ -36,9 +36,10 @@ int song_index[] = { 0, 0 };             // The index of the happy/sad songs
 bool is_playing = false;                 // Is the player playing music
 int is_playing_song = false;             // If playing, which music
 
-// SBUS channel positions, refreshed in the update_sbus proc, 1-based index
+// SBUS channel positions, refreshed in the controls_update proc, 1-based index
 int channels[17];                         // 16ch and their -100 to 100 value
 int sbus_inactive_value = -100;           // Value of inactivated SBUS channels
+bool use_sbus = true;                     // If no SBUS connected, use serial
 
 // SBUS channel mappings
 const int gimbal_leftdrive = 1;
@@ -52,6 +53,9 @@ void setup() {
   // Open debugging serial port
   Serial.begin(115200);
 
+  delay(7000);
+  log("Starting up ...");
+
   // Publish cloud variables and functions
   Particle.variable("systemstatus", systemstatus);
   Particle.variable("lastlog", lastlog);
@@ -60,7 +64,7 @@ void setup() {
 
   // Connect to the MP3 player
   startplayer();
-  if (player_active) {
+  if (!player_active) {
     log("MP3 player initaliztion failed, resetting system.");
     delay(5000);
     System.reset();
@@ -71,22 +75,44 @@ void setup() {
   play_notification(7);
   delay(3500);
 
-  // Initialize SBUS and start timer
+  // Initialize SBUS
   x4r.begin(false);
-  sbus_timer.start();
 
   // Delay to make sure everything has settled
   delay(500);
+
+  // Check SBUS channels
+  controls_update();
 
   // If SBUS initaliztion failed, log, wait and reset
   if (channels[gimbal_leftdrive] == sbus_inactive_value
     && channels[gimbal_rightdrive] == sbus_inactive_value
     && channels[gimbal_head] == sbus_inactive_value
     && channels[gimbal_sound] == sbus_inactive_value) {
-      log("SBUS initaliztion failed, resetting system.");
-      play_notification(4);
-      delay(4000);
-      System.reset();
+      // Check to see if someone is on the serial terminal
+      int serialcontrol_start = millis();
+      Serial.print("Press any key to use serial control ");
+
+      while(millis() - serialcontrol_start < 5000) {
+        if (Serial.available() > 0) {
+          // Allow the droid to be controlled by serial messages
+          use_sbus = false;
+          break;
+        }
+        Serial.print(".");
+        delay(200);
+      }
+
+      // No one is on the terminal and the SBUS channels are empty
+      if (use_sbus) {
+        log("SBUS initaliztion failed, resetting system.");
+        play_notification(4);
+        delay(4000);
+        System.reset();
+      }
+
+      // Start the timer
+      controls_timer.start();
   }
 }
 
@@ -167,8 +193,8 @@ int droid_reset(String extra) {
     log("Local reset initiated.");
     play_notification(9);
   } else {
-      log("Cloud reset initiated.");
-      play_notification(8);
+    log("Cloud reset initiated.");
+    play_notification(8);
   }
 
   delay(3000);
@@ -182,17 +208,18 @@ void log(String message) {
 }
 
 void startplayer() {
-  log("Starting DFPlayer serial:");
+  log("Starting DFPlayer serial.");
   Serial1.begin(9600);
 
-  log("Connecting DFPlayer serial:");
+  log("Connecting DFPlayer serial.");
   if (!mp3player.begin(Serial1))  {
-      log("DFPlayer Mini failed.");
+    player_active = false;
+    log("DFPlayer Mini failed.");
   }
   else  {
-      log("DFPlayer Mini online.");
-      player_active = true;
-      mp3player.volume(10);
+    log("DFPlayer Mini online.");
+    player_active = true;
+    mp3player.volume(10);
   }
 }
 
@@ -235,16 +262,20 @@ int translate_volume() {
   return newvolume;
 }
 
-void update_sbus() {
-  x4r.process();
+void controls_update() {
+  if (use_sbus) {
+    x4r.process();
 
-  channels[gimbal_leftdrive] = x4r.getNormalizedChannel(gimbal_leftdrive);
-  channels[gimbal_rightdrive] = x4r.getNormalizedChannel(gimbal_rightdrive);
-  channels[gimbal_head] = x4r.getNormalizedChannel(gimbal_head);
-  channels[gimbal_sound] = x4r.getNormalizedChannel(gimbal_sound);
+    channels[gimbal_leftdrive] = x4r.getNormalizedChannel(gimbal_leftdrive);
+    channels[gimbal_rightdrive] = x4r.getNormalizedChannel(gimbal_rightdrive);
+    channels[gimbal_head] = x4r.getNormalizedChannel(gimbal_head);
+    channels[gimbal_sound] = x4r.getNormalizedChannel(gimbal_sound);
 
-  channels[rotary_volume] = x4r.getNormalizedChannel(rotary_volume);
-  channels[switch_mode] = x4r.getNormalizedChannel(switch_mode);
+    channels[rotary_volume] = x4r.getNormalizedChannel(rotary_volume);
+    channels[switch_mode] = x4r.getNormalizedChannel(switch_mode);
+  } else {
+
+  }
 }
 
 void play_happy() {
