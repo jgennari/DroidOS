@@ -7,4 +7,4 @@ FOR %%F IN (*.bin) DO (
 )
 :tests
 echo "%filename%"
-particle flash --usb %filename%
+particle flash --%1 %filename%

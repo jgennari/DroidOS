@@ -62,13 +62,13 @@
 
 class DFRobotDFPlayerMini {
   Stream* _serial;
-  
+
   unsigned long _timeOutTimer;
   unsigned long _timeOutDuration = 500;
-  
+
   uint8_t _received[DFPLAYER_RECEIVED_LENGTH];
   uint8_t _sending[DFPLAYER_SEND_LENGTH] = {0x7E, 0xFF, 06, 00, 01, 00, 00, 00, 00, 0xEF};
-  
+
   uint8_t _receivedIndex=0;
 
   void sendStack();
@@ -78,119 +78,119 @@ class DFRobotDFPlayerMini {
 
   void enableACK();
   void disableACK();
-  
+
   void uint16ToArray(uint16_t value,uint8_t *array);
-  
+
   uint16_t arrayToUint16(uint8_t *array);
-  
+
   uint16_t calculateCheckSum(uint8_t *buffer);
-  
+
 
 
   void parseStack();
   bool validateStack();
-  
+
   uint8_t device = DFPLAYER_DEVICE_SD;
-  
+
   public:
-  
+
   uint8_t _handleType;
   uint8_t _handleCommand;
   uint16_t _handleParameter;
   bool _isAvailable = false;
   bool _isSending = false;
-  
+
   bool handleMessage(uint8_t type, uint16_t parameter = 0);
   bool handleError(uint8_t type, uint16_t parameter = 0);
 
   uint8_t readCommand();
-  
+
   bool begin(Stream& stream, bool isACK = true);
-  
+
   bool waitAvailable();
-  
+
   bool available();
-  
+
   uint8_t readType();
-  
+
   uint16_t read();
-  
+
   void setTimeOut(unsigned long timeOutDuration);
-  
+
   void next();
-  
+
   void previous();
-  
+
   void play(int fileNumber=1);
-  
+
   void volumeUp();
-  
+
   void volumeDown();
-  
+
   void volume(uint8_t volume);
-  
+
   void EQ(uint8_t eq);
-  
+
   void loop(int fileNumber);
-  
+
   void outputDevice(uint8_t device);
-  
+
   void sleep();
-  
+
   void reset();
-  
+
   void start();
-  
+
   void pause();
-  
+
   void playFolder(uint8_t folderNumber, uint8_t fileNumber);
-  
+
   void outputSetting(bool enable, uint8_t gain);
-  
+
   void enableLoopAll();
-  
+
   void disableLoopAll();
-  
+
   void playMp3Folder(int fileNumber);
-  
+
   void advertise(int fileNumber);
-  
+
   void playLargeFolder(uint8_t folderNumber, uint16_t fileNumber);
-  
+
   void stopAdvertise();
-  
+
   void stop();
-  
+
   void loopFolder(int folderNumber);
-  
+
   void randomAll();
-  
+
   void enableLoop();
-  
+
   void disableLoop();
-  
+
   void enableDAC();
-  
+
   void disableDAC();
-  
+
   int readState();
-  
+
   int readVolume();
-  
+
   uint8_t readEQ();
-  
+
   int readFileCounts(uint8_t device);
-  
+
   int readCurrentFileNumber(uint8_t device);
-  
+
   int readFileCountsInFolder(int folderNumber);
-  
+
   int readFileCounts();
 
   int readFolderCounts();
-  
+
   int readCurrentFileNumber();
-  
+
 };
 
 #endif
