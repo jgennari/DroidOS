@@ -4,35 +4,58 @@
 // the RC controller. This sketch is designed for a Particle Electron to take
 // full use of the cloud connectivity as well as 3 serial buses.
 
-SYSTEM_MODE(SEMI_AUTOMATIC);             // Managed cloud connection via switch
-
 #include <DFRobotDFPlayerMini.h>         // MP3 Player Library
 #include <SBUS.h>                        // SBUS Library
 #include <Serial4/Serial4.h>             // Serial4 Library for Electron
+#include <Queue.h>                       // Queue for log management
+
+SYSTEM_MODE(MANUAL);                     // Managed cloud connection via switch
 
 DFRobotDFPlayerMini mp3player;           // Declare MP3 player_active
 SBUS x4r(Serial4);                       // Declare RC recv, assign to S4
-Timer mp3_timer(5, mp3_update);         // Create a 1ms timer, assign proc
-Timer sbus_timer(5, sbus_update);       // Create a 1ms timer, assign proc
+Timer mp3_timer(5, mp3_update);          // Create a 1ms timer, assign proc
+Timer sbus_timer(5, sbus_update);        // Create a 1ms timer, assign proc
+FuelGauge fuel;                          // Class for battery management
+Queue<String> logs = Queue<String>(20);  // Queue of logs
 
 // System and cloud variables
 String dosversion = "v1.16";             // DroidOS version
 bool armed = false;                      // Is the Droid armed?
-String lastlog;                          // Last debug message for cloud
+String readlog;                          // Last debug message for cloud
 String systemstatus;                     // System status for cloud
 String systemstatus_last;                // Last system status displayed
-bool show_changes = true;                // Show RC changes in console
+int systemstatus_time;                   // Time (in millis) since last
 const int reset_timeout = 5000;          // Start reset after value, in millis
 const int sound_threshold = 50;          // Percent before activating sound
-bool is_connected = false;               // Ccloud connection status
+bool is_connected = false;               // Cloud connection status
+bool show_activity = false;              // Show the loops in the consoleupdate
+bool show_changes = true;                // Show RC changes in console
+double battcharge;                       // Charge % of internal battery
+int log_length;                          // Number of log entries unread
+int freememory;                          // Free memory available
+int systemloop;                          // Time (in millis) since sys update
+
+// LED modes
+LEDStatus FailedSBUS(RGB_COLOR_RED,      // Red flashing for SBUS failure
+  LED_PATTERN_FADE,
+  200,
+  LED_PRIORITY_IMPORTANT);
+LEDStatus FailedAudio(RGB_COLOR_YELLOW,  // Yellow flashing for failed audio
+  LED_PATTERN_FADE,
+  200,
+  LED_PRIORITY_IMPORTANT);
+LEDStatus RecvControl(RGB_COLOR_GREEN,   // Green blinking for control recv
+  LED_PATTERN_BLINK);
 
 // Keep track of the status of the MP3 player, including the last song played
 // and the state of the player to avoid errors
 bool player_active = false;              // Is the MP3 player initialized
 bool player_card = false;                // Is the card mounted yet
 int song_index[] = { 0, 0 };             // The index of the happy/sad songs
+int song_count[] = { 0, 0 };             // The count of the happy/sad songs
 bool is_playing = false;                 // Debounce playing efforts
 int is_playing_last;                     // Time (in millis) since last playing
+int last_finished;                       // Only reset for each play
 int is_playing_timeout = 6000;           // Debounce timeout
 int last_volume;                         // Last volume
 
@@ -58,14 +81,23 @@ void setup() {
 
   // Publish cloud variables and functions
   Particle.variable("systemstatus", systemstatus);
-  Particle.variable("lastlog", lastlog);
+  Particle.variable("readlog", readlog);
+  Particle.variable("happy_count", song_count[0]);
+  Particle.variable("sad_count", song_count[1]);
+  Particle.variable("log_length", log_length);
+  Particle.variable("battcharge", battcharge);
+  Particle.variable("freememory", freememory);
   Particle.variable("dosversion", dosversion);
-  Particle.function("droid_reset", droid_reset);
+  Particle.function("systemreset", systemreset);
+  Particle.function("advancelog", advancelog);
+  Particle.function("clearlog", clearlog);
+  Particle.function("remote_ctrl", remote_ctrl);
 
   // Connect to the MP3 player
   startplayer();
   if (!player_active) {
     log("MP3 player initaliztion failed, resetting system.");
+    FailedAudio.setActive(true);
     delay(5000);
     System.reset();
   }
@@ -75,6 +107,7 @@ void setup() {
     while (!player_card) {
       if (millis() - player_card_start > 5000) {
         log("Card online failed, resetting system.");
+        FailedAudio.setActive(true);
         delay(5000);
         System.reset();
       }
@@ -84,6 +117,28 @@ void setup() {
   // Play confirmation to let use know it's booting
   log("Droid initaliztion sequence started.");
   play_notification(7);
+
+  // Count files in Happy & Sad
+  int tries = 0;
+  while (tries < 3) {
+    song_count[0] = mp3player.readFileCountsInFolder(1);
+    song_count[1] = mp3player.readFileCountsInFolder(2);
+    log("Found " + String(song_count[0]) + " in happy and " + String(song_count[1]) + " in sad.");
+
+    // For some reason the file count proc sometimes returns -1, if it does,
+    // try again for 3 times. If it fails, reset the system
+    if ((song_count[0] < 1 || song_count[1] < 1) && tries == 2) {
+      log("File counts failed, resetting system.");
+      FailedAudio.setActive(true);
+      delay(2000);
+      resetplayer();
+      System.reset();
+    } else if (song_count[0] < 1 || song_count[1] < 1) {
+      tries++;
+    } else {
+      break;
+    }
+  }
 
   // Initialize SBUS
   x4r.begin(false);
@@ -125,8 +180,9 @@ void setup() {
       if (use_sbus) {
         Serial.println("");
         log("SBUS initaliztion failed, resetting system.");
+        FailedSBUS.setActive(true);
         play_notification(4);
-        delay(4000);
+        delay(10000);
         System.reset();
       }
 
@@ -135,8 +191,26 @@ void setup() {
 }
 
 void loop() {
+  if (show_activity)
+    Serial.print(".");
+
   // Write a cloud variable with all the debug info
   update_status();
+
+  // Only update system variables every 5 sec
+  if (millis() - systemloop > 500) {
+    systemloop = millis();
+    // Update system statistics
+    battcharge = (double) fuel.getSoC();
+    freememory = System.freeMemory();
+    Particle.process();
+  }
+
+  // Show green LED if controlled within the last 500ms
+  if (millis() - systemstatus_time < 500 && !RecvControl.isActive())
+    RecvControl.setActive(true);
+  else if (RecvControl.isActive())
+    RecvControl.setActive(false);
 
   // Check arming status on each loop
   if (armed && channels[switch_mode] < -50)
@@ -148,7 +222,7 @@ void loop() {
   if (channels[gimbal_sound] < -50 && channels[gimbal_head] > 50) {
     delay(reset_timeout);
     if (channels[gimbal_sound] < -50 && channels[gimbal_head] > 50)
-      droid_reset("Local");
+      systemreset("Local");
   }
 
   // Only execute these options when armed
@@ -160,19 +234,19 @@ void loop() {
       disconnect();
 
     // If not playing and ch4 pushed right, play happy
-    if (!is_playing && channels[gimbal_sound] > sound_threshold)
+    if (channels[gimbal_sound] > sound_threshold)
       play_happy();
 
     // If not playing and ch4 pushed right, play happy
-    if (!is_playing && channels[gimbal_sound] < -sound_threshold)
+    if (channels[gimbal_sound] < -sound_threshold)
       play_sad();
+  }
 
-    // Check the volume, translate RC and change if necessary
-    int current_volume = translate_volume();
-    if (last_volume != current_volume) {
-      last_volume = current_volume;
-      mp3player.volume(current_volume);
-    }
+  // Check the volume, translate RC and change if necessary
+  int current_volume = translate_volume();
+  if (last_volume != current_volume) {
+    last_volume = current_volume;
+    mp3player.volume(current_volume);
   }
 
   if (is_playing && millis() - is_playing_last > is_playing_timeout) {
@@ -182,6 +256,9 @@ void loop() {
 }
 
 void mp3_update() {
+  if (show_activity)
+    Serial.print("x");
+
   // Log changes to the MP3 player state
   if (player_active && (!player_card || mp3player.available()))
     decode_mp3status(mp3player.readType(), mp3player.read());
@@ -214,7 +291,7 @@ void connect() {
   is_connected = true;
 }
 
-int droid_reset(String extra) {
+int systemreset(String extra) {
   if (extra == "Local") {
     log("Local reset initiated.");
     play_notification(9);
@@ -231,8 +308,25 @@ int droid_reset(String extra) {
 void log(String message) {
   if (message.length() > 0) {
     Serial.println(message);
-    lastlog = message;
+    logs.push(message);
+    log_length = logs.count();
   }
+}
+
+int clearlog(String extra) {
+  logs.clear();
+  log_length = logs.count();
+  return logs.count();
+}
+
+int advancelog(String extra) {
+  if (logs.count() > 0)
+    readlog = logs.pop();
+  else
+    readlog = "End of log.";
+
+  log_length = logs.count();
+  return logs.count();
 }
 
 void startplayer() {
@@ -280,6 +374,7 @@ void update_status() {
     String(channels[switch_mode]);
 
   if (show_changes && (systemstatus_last != systemstatus)) {
+    systemstatus_time = millis();
     systemstatus_last = systemstatus;
     Serial.println(systemstatus);
   }
@@ -302,6 +397,9 @@ int translate_volume() {
 }
 
 void sbus_update() {
+  if (show_activity)
+    Serial.print("o");
+
   if (use_sbus) {
     x4r.process();
     channels[gimbal_leftdrive] = x4r.getNormalizedChannel(gimbal_leftdrive);
@@ -315,26 +413,45 @@ void sbus_update() {
     {
         int ch = Serial.readStringUntil(':').toInt();
         int val = Serial.parseInt();
-
-        if (ch == 99) {
-          resetplayer();
-        }
-        else if (ch == 98) {
-          if (val == 1)
-            play_happy();
-          else
-            play_sad();
-        }
-        else if (ch == 97) {
-          play_notification(val);
-        }
-        else if (ch == 96) {
-          System.reset();
-        }
-        else if (ch > 0) {
-          channels[ch] = val;
-        }
+        manual_control(ch, val);
     }
+  }
+}
+
+int remote_ctrl(String command) {
+  int split = command.indexOf(":");
+  int ch = command.substring(0, split).toInt();
+  int val = command.substring(split+1).toInt();
+  manual_control(ch, val);
+  return 1;
+}
+
+void manual_control(int ch, int val) {
+  systemstatus_time = millis();
+  if (ch == 99) {
+    resetplayer();
+  }
+  else if (ch == 98) {
+    if (val == 1)
+      play_happy();
+    else
+      play_sad();
+  }
+  else if (ch == 97) {
+    play_notification(val);
+  }
+  else if (ch == 96) {
+    log("Resetting system ...");
+    delay(2000);
+    System.reset();
+  }
+  else if (ch == 95) {
+    log("Entering DFU ...");
+    delay(2000);
+    System.dfu();
+  }
+  else if (ch > 0) {
+    channels[ch] = val;
   }
 }
 
@@ -348,10 +465,13 @@ void controls_reset() {
 }
 
 void play_happy() {
+  if (is_playing)
+    return;
+
   is_playing = true;
   is_playing_last = millis();
 
-  if (song_index[0] <= 20)
+  if (song_index[0] < song_count[0])
       song_index[0] = song_index[0] + 1;
   else
       song_index[0] = 1;
@@ -361,9 +481,12 @@ void play_happy() {
 }
 
 void play_sad() {
+  if (is_playing)
+    return;
+
   is_playing = true;
   is_playing_last = millis();
-  if (song_index[1] <= 20)
+  if (song_index[1] < song_count[1])
       song_index[1] = song_index[1] + 1;
   else
       song_index[1] = 1;
@@ -402,8 +525,11 @@ void decode_mp3status(uint8_t type, int value) {
       player_card = true;
       break;
     case DFPlayerPlayFinished:
-      log("Play " + String(value) + " Finished!");
-      is_playing = false;
+      if (value != last_finished) {
+        last_finished = value;
+        log("Play " + String(value) + " Finished!");
+        is_playing = false;
+      }
       break;
     case DFPlayerError:
       switch (value) {
