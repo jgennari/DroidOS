@@ -14,19 +14,19 @@ SYSTEM_MODE(MANUAL);                     // Managed cloud connection via switch
 DFRobotDFPlayerMini mp3player;           // Declare MP3 player_active
 SBUS x4r(Serial4);                       // Declare RC recv, assign to S4
 Timer mp3_timer(5, mp3_update);          // Create a 1ms timer, assign proc
-Timer sbus_timer(5, sbus_update);        // Create a 1ms timer, assign proc
+Timer sbus_timer(1, sbus_update);        // Create a 1ms timer, assign proc
 FuelGauge fuel;                          // Class for battery management
 Queue<String> logs = Queue<String>(20);  // Queue of logs
 
 // System and cloud variables
-String dosversion = "v1.16";             // DroidOS version
+String dosversion = "v1.17";             // DroidOS version
 bool armed = false;                      // Is the Droid armed?
 String readlog;                          // Last debug message for cloud
 String systemstatus;                     // System status for cloud
 String systemstatus_last;                // Last system status displayed
 int systemstatus_time;                   // Time (in millis) since last
 const int reset_timeout = 5000;          // Start reset after value, in millis
-const int sound_threshold = 50;          // Percent before activating sound
+const int sound_threshold = 35;          // Percent before activating sound
 bool is_connected = false;               // Cloud connection status
 bool show_activity = false;              // Show the loops in the consoleupdate
 bool show_changes = true;                // Show RC changes in console
@@ -56,19 +56,20 @@ int song_count[] = { 0, 0 };             // The count of the happy/sad songs
 bool is_playing = false;                 // Debounce playing efforts
 int is_playing_last;                     // Time (in millis) since last playing
 int last_finished;                       // Only reset for each play
-int is_playing_timeout = 6000;           // Debounce timeout
+int is_playing_timeout = 800;            // Debounce timeout
 int last_volume;                         // Last volume
 
 // SBUS channel positions, refreshed in the sbus_update proc, 1-based index
 int channels[17];                         // 16ch and their -100 to 100 value
 int sbus_inactive_value = -100;           // Value of inactivated SBUS channels
+int sbus_inactive_value_2 = 0 ;           // Value of inactivated SBUS channels
 bool use_sbus = true;                     // If no SBUS connected, use serial
 
 // SBUS channel mappings
 const int gimbal_leftdrive = 1;
-const int gimbal_rightdrive = 2;
-const int gimbal_sound = 3;
-const int gimbal_head = 4;
+const int gimbal_rightdrive = 3;
+const int gimbal_sound = 4;
+const int gimbal_head = 2;
 const int rotary_volume = 5;
 const int switch_mode = 6;
 
@@ -114,20 +115,16 @@ void setup() {
     }
   }
 
-  // Play confirmation to let use know it's booting
-  log("Droid initaliztion sequence started.");
-  play_notification(7);
-
   // Count files in Happy & Sad
   int tries = 0;
-  while (tries < 3) {
+  while (tries < 5) {
     song_count[0] = mp3player.readFileCountsInFolder(1);
     song_count[1] = mp3player.readFileCountsInFolder(2);
     log("Found " + String(song_count[0]) + " in happy and " + String(song_count[1]) + " in sad.");
 
     // For some reason the file count proc sometimes returns -1, if it does,
     // try again for 3 times. If it fails, reset the system
-    if ((song_count[0] < 1 || song_count[1] < 1) && tries == 2) {
+    if ((song_count[0] < 1 || song_count[1] < 1) && tries == 4) {
       log("File counts failed, resetting system.");
       FailedAudio.setActive(true);
       delay(2000);
@@ -140,20 +137,26 @@ void setup() {
     }
   }
 
+  // Play confirmation to let use know it's booting
+  log("Droid initaliztion sequence started.");
+  play_notification(7);
+
   // Initialize SBUS
   x4r.begin(false);
+  sbus_timer.start();
 
-  // Delay to make sure everything has settled
-  delay(500);
-
-  // Check SBUS channels
-  sbus_update();
+  // Wait for SBUS to init
+  delay(800);
 
   // If SBUS initaliztion failed, log, wait and reset
-  if (channels[gimbal_leftdrive] == sbus_inactive_value
+  if ((channels[gimbal_leftdrive] == sbus_inactive_value
     && channels[gimbal_rightdrive] == sbus_inactive_value
     && channels[gimbal_head] == sbus_inactive_value
-    && channels[gimbal_sound] == sbus_inactive_value) {
+    && channels[gimbal_sound] == sbus_inactive_value) ||
+    (channels[gimbal_leftdrive] == sbus_inactive_value_2
+    && channels[gimbal_rightdrive] == sbus_inactive_value_2
+    && channels[gimbal_head] == sbus_inactive_value_2
+    && channels[gimbal_sound] == sbus_inactive_value_2)) {
       // Check to see if someone is on the serial terminal
       int serialcontrol_start = millis();
       Serial.print("Press any key to use serial control ");
@@ -185,9 +188,8 @@ void setup() {
         delay(10000);
         System.reset();
       }
-
-      sbus_timer.start();
   }
+
 }
 
 void loop() {
@@ -365,9 +367,9 @@ void update_status() {
     "R:" +
     String(channels[gimbal_rightdrive]) +
     "S:" +
-    String(channels[gimbal_head]) +
-    "H:" +
     String(channels[gimbal_sound]) +
+    "H:" +
+    String(channels[gimbal_head]) +
     "V:" +
     String(channels[rotary_volume]) +
     "M:" +
