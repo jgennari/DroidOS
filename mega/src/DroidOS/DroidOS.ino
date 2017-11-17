@@ -291,13 +291,13 @@ int advancelog(String extra) {
 
 void startplayer() {
   log("Starting DFPlayer serial.");
-  Serial1.begin(9600);
+  Serial3.begin(9600);
 
   // Delay to make sure serial connects
   delay(1500);
 
   log("Connecting DFPlayer serial.");
-  if (!mp3player.begin(Serial1))  {
+  if (!mp3player.begin(Serial3))  {
     player_active = false;
     log("DFPlayer Mini failed.");
   }
