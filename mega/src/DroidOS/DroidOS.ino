@@ -22,12 +22,21 @@ int systemstatus_time;                   // Time (in millis) since last
 const int reset_timeout = 5000;          // Start reset after value, in millis
 const int sound_threshold = 35;          // Percent before activating sound
 bool is_connected = false;               // Cloud connection status
-bool show_activity = false;              // Show the loops in the consoleupdate
+bool show_activity = false;               // Show the loops in the consoleupdate
 bool show_changes = true;                // Show RC changes in console
 double battcharge;                       // Charge % of internal battery
 int log_length;                          // Number of log entries unread
 int freememory;                          // Free memory available
 int systemloop;                          // Time (in millis) since sys update
+const int board_led = 13;                // LED on the board
+const int status_led_duration = 100;     // Length of time to flash the LED
+const int status_led_off = 4000;         // Time of off period
+int status_led_last = 0;                 // Last flash time
+int status_led_state = LOW;              // Current state
+const int mp3_timer_interval = 10;       // Time in between MP3 polls
+int mp3_timer = 0;                       // Last MP3 poll
+const int sbus_timer_interval = 1;       // Time in between SBUS polls
+int sbus_timer = 0;                      // Last SBUS poll
 
 // Keep track of the status of the MP3 player, including the last song played
 // and the state of the player to avoid errors
@@ -55,12 +64,18 @@ const int gimbal_head = 2;
 const int rotary_volume = 5;
 const int switch_mode = 6;
 
-void(* resetFunc) (void) = 0;
+void resetFunc() {
+  SCB_AIRCR = 0x05FA0004;
+  delay(2000);  
+}
 
 void setup() {
   // Open debugging serial port
   Serial.begin(115200);
 
+  pinMode(board_led, OUTPUT);     
+  digitalWrite(board_led, HIGH);
+  
   delay(7000);
   log("DroidOS " + dosversion + " starting up ...");
 
@@ -75,7 +90,8 @@ void setup() {
     log("Waiting for card online.");
     int player_card_start = millis();
     while (!player_card) {
-      if (millis() - player_card_start > 5000) {
+      mp3_update();
+      if (millis() - player_card_start > 20000) {
         log("Card online failed, resetting system.");
         delay(5000);
         resetFunc();
@@ -155,17 +171,37 @@ void setup() {
       }
   }
 
+  // Turn status light off
+  digitalWrite(board_led, LOW);
+  status_led_last = millis();
 }
 
 void loop() {
   if (show_activity)
     Serial.print(".");
 
+  if (status_led_state == HIGH && millis() - status_led_last >= status_led_duration) {
+    status_led_last = millis();
+    status_led_state = LOW;
+  }
+  else if (status_led_state == LOW && millis() - status_led_last >= status_led_off) {
+    status_led_last = millis();
+    status_led_state = HIGH;    
+  }
+  digitalWrite(board_led, status_led_state);
+  
   // Write a cloud variable with all the debug info
   update_status();
+
+  if (millis() - mp3_timer > mp3_timer_interval) {
+    mp3_update();  
+    mp3_timer = millis();
+  }
   
-  mp3_update();
-  sbus_update();
+  if (millis() - sbus_timer > sbus_timer_interval) {
+    sbus_update();
+    sbus_timer = millis();
+  }
   
   // Only update system variables every 5 sec
   if (millis() - systemloop > 500) {
@@ -217,7 +253,7 @@ void loop() {
 
 void mp3_update() {
   if (show_activity)
-    Serial.print("x");
+    Serial.print("m");
 
   // Log changes to the MP3 player state
   if (player_active && (!player_card || mp3player.available()))
@@ -291,13 +327,13 @@ int advancelog(String extra) {
 
 void startplayer() {
   log("Starting DFPlayer serial.");
-  Serial1.begin(9600);
+  Serial3.begin(9600);
 
   // Delay to make sure serial connects
   delay(1500);
 
   log("Connecting DFPlayer serial.");
-  if (!mp3player.begin(Serial1))  {
+  if (!mp3player.begin(Serial3))  {
     player_active = false;
     log("DFPlayer Mini failed.");
   }
@@ -332,10 +368,15 @@ void update_status() {
     "M:" +
     String(channels[switch_mode]);
 
-  if (show_changes && (systemstatus_last != systemstatus)) {
-    systemstatus_time = millis();
-    systemstatus_last = systemstatus;
-    Serial.println(systemstatus);
+  if ((systemstatus_last != systemstatus)) {
+    if (show_changes) {
+      systemstatus_time = millis();
+      systemstatus_last = systemstatus;
+      Serial.println(systemstatus);
+    }    
+    status_led_last = millis();
+    status_led_state = HIGH;
+    digitalWrite(board_led, status_led_state);
   }
 }
 
@@ -357,7 +398,7 @@ int translate_volume() {
 
 void sbus_update() {
   if (show_activity)
-    Serial.print("o");
+    Serial.print("s");
 
   if (use_sbus) {
     x4r.process();
@@ -467,10 +508,10 @@ void decode_mp3status(uint8_t type, int value) {
 
   switch (type) {
     case TimeOut:
-      //log("Time Out!");
+      log("Time Out!");
       break;
     case WrongStack:
-      //log("Stack Wrong!");
+      log("Stack Wrong!");
       break;
     case DFPlayerCardInserted:
       log("Card Inserted!");
