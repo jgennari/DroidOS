@@ -1,4 +1,6 @@
-// DroidOS v1.04 by Joey Gennari
+#include <Servo.h>
+
+// DroidOS v1.18 by Joey Gennari
 // This is the operating system that powers our R2 unit. It includes an MP3
 // player from DFPlayer and an SBUS receiver to initiate responses based on
 // the RC controller. This sketch is designed for a Particle Electron to take
@@ -13,8 +15,7 @@ SBUS x4r(Serial2);                       // Declare RC recv, assign to S4
 Queue<String> logs = Queue<String>(20);  // Queue of logs
 
 // System and cloud variables
-String dosversion = "v1.17";             // DroidOS version
-bool armed = false;                      // Is the Droid armed?
+String dosversion = "v1.18";             // DroidOS version
 String readlog;                          // Last debug message for cloud
 String systemstatus;                     // System status for cloud
 String systemstatus_last;                // Last system status displayed
@@ -35,7 +36,7 @@ int status_led_last = 0;                 // Last flash time
 int status_led_state = LOW;              // Current state
 const int mp3_timer_interval = 10;       // Time in between MP3 polls
 int mp3_timer = 0;                       // Last MP3 poll
-const int sbus_timer_interval = 1;       // Time in between SBUS polls
+const int sbus_timer_interval = 25;       // Time in between SBUS polls
 int sbus_timer = 0;                      // Last SBUS poll
 
 // Keep track of the status of the MP3 player, including the last song played
@@ -76,9 +77,13 @@ void setup() {
   pinMode(board_led, OUTPUT);     
   digitalWrite(board_led, HIGH);
   
-  delay(7000);
-  log("DroidOS " + dosversion + " starting up ...");
-
+  Serial.print("DroidOS " + dosversion + " starting up ");
+  for (int i=0; i <= 3; i++){
+    Serial.print(".");
+    delay(1000);
+  }
+  Serial.println(".");
+   
   // Connect to the MP3 player
   startplayer();
   if (!player_active) {
@@ -119,16 +124,15 @@ void setup() {
       break;
     }
   }
-
-  // Play confirmation to let use know it's booting
-  log("Droid initaliztion sequence started.");
-  play_notification(7);
-
+  
   // Initialize SBUS
   x4r.begin(false);
 
-  // Wait for SBUS to init
-  delay(800);
+  // Wait for SBUS to init   
+  for (int i=0; i <= 50; i++){
+    sbus_update();
+    delay(25);
+  }
 
   // If SBUS initaliztion failed, log, wait and reset
   if ((channels[gimbal_leftdrive] == sbus_inactive_value
@@ -174,6 +178,7 @@ void setup() {
   // Turn status light off
   digitalWrite(board_led, LOW);
   status_led_last = millis();
+  log("Setup complete.");
 }
 
 void loop() {
@@ -208,12 +213,6 @@ void loop() {
     systemloop = millis();
   }
 
-  // Check arming status on each loop
-  if (armed && channels[switch_mode] < -50)
-    disarm();
-  else if (!armed && channels[switch_mode] > -50)
-    arm();
-
   // Initiate local reset
   if (channels[gimbal_sound] < -50 && channels[gimbal_head] > 50) {
     delay(reset_timeout);
@@ -221,22 +220,13 @@ void loop() {
       systemreset("Local");
   }
 
-  // Only execute these options when armed
-  if (armed) {
-    // When system switch pushed to 3rd, position, announce & arm the cloud
-    if (channels[switch_mode] > 50 && !is_connected)
-      connect();
-    else if (channels[switch_mode] < 50 && is_connected)
-      disconnect();
+  // If not playing and ch4 pushed right, play happy
+  if (channels[gimbal_sound] > sound_threshold)
+    play_happy();
 
-    // If not playing and ch4 pushed right, play happy
-    if (channels[gimbal_sound] > sound_threshold)
-      play_happy();
-
-    // If not playing and ch4 pushed right, play happy
-    if (channels[gimbal_sound] < -sound_threshold)
-      play_sad();
-  }
+  // If not playing and ch4 pushed right, play happy
+  if (channels[gimbal_sound] < -sound_threshold)
+    play_sad();
 
   // Check the volume, translate RC and change if necessary
   int current_volume = translate_volume();
@@ -258,33 +248,6 @@ void mp3_update() {
   // Log changes to the MP3 player state
   if (player_active && (!player_card || mp3player.available()))
     decode_mp3status(mp3player.readType(), mp3player.read());
-}
-
-void arm() {
-  log("Droid armed.");
-  play_notification(3);
-  armed = true;
-}
-
-void disarm() {
-  log("Droid disarmed.");
-  play_notification(6);
-  disconnect();
-  armed = false;
-}
-
-void disconnect() {
-  log("Disconnecting communication system.");
-  //play_notification(11);
-
-  is_connected = false;
-}
-
-void connect() {
-  log("Initiating communication system.");
-  play_notification(10);
-
-  is_connected = true;
 }
 
 int systemreset(String extra) {
@@ -498,7 +461,6 @@ void play_sad() {
 void play_notification(int notification) {
   if (player_active && player_card) {
     log("Playing notification " + String(notification) + ".");
-    //mp3player.pause();
     mp3player.playFolder(3, notification);
   }
 }

@@ -27,7 +27,7 @@ void SBUS::begin(bool useTimer) {
 	_decoderErrorFrames = 0;
 	_failsafe           = SBUS_FAILSAFE_INACTIVE;
 
-	_serial.begin(100000, SERIAL_8E2);
+	_serial.begin(100000, SERIAL_8E1_RXINV_TXINV );
 }
 
 void SBUS::process() {
