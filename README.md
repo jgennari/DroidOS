@@ -4,7 +4,7 @@ DroidOS is a Arduino based operating system for community built R2 units. It use
 
 ## Bring your droid to life!
 
-The DroidOS got us started in the right direction, however this project is just the starting point for us. It allows us to control lights and sound from the RC controller, but you can build anything on top of it. It's based on the Particle.io Electron cellular-connected Arduino-compatible development kit.
+The DroidOS got us started in the right direction, however this project is just the starting point for us. It allows us to control lights and sound from the RC controller, but you can build anything on top of it. It's based on the Teensy LC development kit.
 
 ## Startup Sequence:  
 The startup lives in the Arduino `setup` procedure. It follows this procedure:
@@ -15,13 +15,19 @@ The startup lives in the Arduino `setup` procedure. It follows this procedure:
 * Confirm SBUS is communicating
 * Check Mode Switch
 
-If any step fails (except the first two), an error will be annunciated via the MP3 player.
+During the setup, the status LED on the Teensy will be solid.
 
-## Mode Switch:
-The mode switch allows for arming and disarming of the main program loop to allow for debugging. When the 3-position mode switch (as defined in the sketch) is in `up` position, the droid is disarmed. When in the `middle` position, the droid is armed and the main loop will respond to input. When the switch is in the `down` position, the droid will initiate it's communication loop and connect to the Particle.io cloud.
+Any error will be annunciated via the status LED on the board. Short bursts indicate the failure mode, followed by no light for 1.5 seconds, repeated 3 times.
+
+1. MP3 player initaliztion failed
+2. Card online failed
+3. Failed to count MP3 files
+4. SBUS init failed, no serial control
+
+Upon failure and notification the system will reset and re-enter the startup sequence.
 
 ## SBUS:
-The SBUS library was sourced from someone on GitHub. We are using an FrSky X4R and pulling the inverted SBUS signal off of one of the through-hole pads on the board. 
+The SBUS library was sourced from someone on GitHub. We are using an FrSky X4R & X8R and are using inverted serial setup in Arduino.
 
 ## Questions/suggestions
 If you have any questions or suggestions please feel free to reach out via GitHub or submit and issue.
