@@ -1,5 +1,7 @@
 # DroidOS
 
+![Board](https://github.com/jgennari/DroidOS/blob/master/hardware/Board.png?raw=true "DroidOS Board")
+
 DroidOS is a Arduino based operating system for community built R2 units. It uses an SBUS-based RC receiver and an Arduino microcontroller to operate any number of extra functions on your droid.
 
 ## Bring your droid to life!
