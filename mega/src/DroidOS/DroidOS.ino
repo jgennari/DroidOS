@@ -3,15 +3,15 @@
 // DroidOS v1.18 by Joey Gennari
 // This is the operating system that powers our R2 unit. It includes an MP3
 // player from DFPlayer and an SBUS receiver to initiate responses based on
-// the RC controller. This sketch is designed for a Particle Electron to take
-// full use of the cloud connectivity as well as 3 serial buses.
+// the RC controller. This sketch is designed for the Teency LC to take
+// use of 3 serial buses.
 
 #include "DFRobotDFPlayerMini.h"         // MP3 Player Library
 #include "SBUS.h"                        // SBUS Library
 #include "Queue.h"                       // Queue for log management
 
 DFRobotDFPlayerMini mp3player;           // Declare MP3 player_active
-SBUS x4r(Serial2);                       // Declare RC recv, assign to S4
+SBUS x4r(Serial2);                       // Declare RC recv, assign to S2
 Queue<String> logs = Queue<String>(20);  // Queue of logs
 
 // System and cloud variables
@@ -23,7 +23,7 @@ int systemstatus_time;                   // Time (in millis) since last
 const int reset_timeout = 5000;          // Start reset after value, in millis
 const int sound_threshold = 35;          // Percent before activating sound
 bool is_connected = false;               // Cloud connection status
-bool show_activity = false;               // Show the loops in the consoleupdate
+bool show_activity = false;              // Show the loops in the consoleupdate
 bool show_changes = true;                // Show RC changes in console
 double battcharge;                       // Charge % of internal battery
 int log_length;                          // Number of log entries unread
@@ -36,7 +36,7 @@ int status_led_last = 0;                 // Last flash time
 int status_led_state = LOW;              // Current state
 const int mp3_timer_interval = 10;       // Time in between MP3 polls
 int mp3_timer = 0;                       // Last MP3 poll
-const int sbus_timer_interval = 25;       // Time in between SBUS polls
+const int sbus_timer_interval = 25;      // Time in between SBUS polls
 int sbus_timer = 0;                      // Last SBUS poll
 
 // Keep track of the status of the MP3 player, including the last song played
@@ -86,9 +86,9 @@ void setup() {
    
   // Connect to the MP3 player
   startplayer();
-  if (!player_active) {
+  if (!player_active {
     log("MP3 player initaliztion failed, resetting system.");
-    delay(5000);
+    flash_error(1));
     resetFunc();
   }
   else {
@@ -98,7 +98,7 @@ void setup() {
       mp3_update();
       if (millis() - player_card_start > 20000) {
         log("Card online failed, resetting system.");
-        delay(5000);
+        flash_error(2);
         resetFunc();
       }
     }
@@ -115,7 +115,7 @@ void setup() {
     // try again for 3 times. If it fails, reset the system
     if ((song_count[0] < 1 || song_count[1] < 1) && tries == 4) {
       log("File counts failed, resetting system.");
-      delay(2000);
+      flash_error(3);
       resetplayer();
       resetFunc();
     } else if (song_count[0] < 1 || song_count[1] < 1) {
@@ -169,8 +169,7 @@ void setup() {
       if (use_sbus) {
         Serial.println("");
         log("SBUS initaliztion failed, resetting system.");
-        play_notification(4);
-        delay(10000);
+        flash_error(4);
         resetFunc();
       }
   }
@@ -179,6 +178,20 @@ void setup() {
   digitalWrite(board_led, LOW);
   status_led_last = millis();
   log("Setup complete.");
+}
+
+void flash_error(int times) {
+  digitalWrite(board_led, LOW);  
+  delay(500);
+  for (int ix=0; ix <= 3; ix++) {   
+    for (int i=0; i <= times-1; i++) {
+      digitalWrite(board_led, HIGH);  
+      delay(200);
+      digitalWrite(board_led, LOW);  
+      delay(200);
+    } 
+    delay(1500);
+  }  
 }
 
 void loop() {
