@@ -183,7 +183,7 @@ void setup() {
 void flash_error(int times) {
   digitalWrite(board_led, LOW);  
   delay(500);
-  for (int ix=0; ix <= 3; ix++) {   
+  for (int ix=0; ix <= 2; ix++) {   
     for (int i=0; i <= times-1; i++) {
       digitalWrite(board_led, HIGH);  
       delay(200);

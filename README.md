@@ -29,7 +29,7 @@ Any error will be annunciated via the status LED on the board. Short bursts indi
 Upon failure and notification the system will reset and re-enter the startup sequence.
 
 ## SBUS:
-The SBUS library was sourced from someone on GitHub. We are using an FrSky X4R & X8R and are using inverted serial setup in Arduino.
+The SBUS library was sourced & slightly modified from [zendes](https://github.com/zendes/SBUS). We are using an FrSky X4R & X8R and are using inverted serial setup in Arduino. Once SBUS is connected and the main loop is running, any change to the SBUS first 6 channels will trigger a brief flash of the Teensy status LED.
 
 ## Questions/suggestions
 If you have any questions or suggestions please feel free to reach out via GitHub or submit and issue.
