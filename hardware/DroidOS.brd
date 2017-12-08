@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="8.4.0">
+<eagle version="8.4.3">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -170,7 +170,7 @@
 <text x="73.5584" y="61.0108" size="0.6096" layer="25" font="vector" ratio="20" rot="R270">GND</text>
 <text x="78.3336" y="65.5828" size="0.4572" layer="25" font="vector" ratio="20" rot="R270">SBUS_INV</text>
 <text x="78.4098" y="60.3758" size="0.4572" layer="25" font="vector" ratio="20" rot="R270">SBUS/PPM</text>
-<text x="77.9526" y="41.148" size="0.9144" layer="25" font="vector" ratio="20" rot="R90">DroidOS v0.3 rev D
+<text x="54.6608" y="55.7022" size="0.9144" layer="25" font="vector" ratio="20" rot="R90">DroidOS v0.4 rev A
 J. Gennari 2017</text>
 <text x="96.4184" y="75.0062" size="0.6096" layer="25" font="vector" ratio="20" align="center">1S-4S
 (MAX 16V)</text>
@@ -1609,6 +1609,41 @@ Source: http://www.ledtronics.com/ds/smd-0603/Dstr0093.pdf</description>
 </package3d>
 </packages3d>
 </library>
+<library name="pinhead" urn="urn:adsk.eagle:library:325">
+<description>&lt;b&gt;Pin Header Connectors&lt;/b&gt;&lt;p&gt;
+&lt;author&gt;Created by librarian@cadsoft.de&lt;/author&gt;</description>
+<packages>
+<package name="1X02" urn="urn:adsk.eagle:footprint:22309/1" library_version="2">
+<description>&lt;b&gt;PIN HEADER&lt;/b&gt;</description>
+<wire x1="-1.905" y1="1.27" x2="-0.635" y2="1.27" width="0.1524" layer="21"/>
+<wire x1="-0.635" y1="1.27" x2="0" y2="0.635" width="0.1524" layer="21"/>
+<wire x1="0" y1="0.635" x2="0" y2="-0.635" width="0.1524" layer="21"/>
+<wire x1="0" y1="-0.635" x2="-0.635" y2="-1.27" width="0.1524" layer="21"/>
+<wire x1="-2.54" y1="0.635" x2="-2.54" y2="-0.635" width="0.1524" layer="21"/>
+<wire x1="-1.905" y1="1.27" x2="-2.54" y2="0.635" width="0.1524" layer="21"/>
+<wire x1="-2.54" y1="-0.635" x2="-1.905" y2="-1.27" width="0.1524" layer="21"/>
+<wire x1="-0.635" y1="-1.27" x2="-1.905" y2="-1.27" width="0.1524" layer="21"/>
+<wire x1="0" y1="0.635" x2="0.635" y2="1.27" width="0.1524" layer="21"/>
+<wire x1="0.635" y1="1.27" x2="1.905" y2="1.27" width="0.1524" layer="21"/>
+<wire x1="1.905" y1="1.27" x2="2.54" y2="0.635" width="0.1524" layer="21"/>
+<wire x1="2.54" y1="0.635" x2="2.54" y2="-0.635" width="0.1524" layer="21"/>
+<wire x1="2.54" y1="-0.635" x2="1.905" y2="-1.27" width="0.1524" layer="21"/>
+<wire x1="1.905" y1="-1.27" x2="0.635" y2="-1.27" width="0.1524" layer="21"/>
+<wire x1="0.635" y1="-1.27" x2="0" y2="-0.635" width="0.1524" layer="21"/>
+<pad name="1" x="-1.27" y="0" drill="1.016" shape="long" rot="R90"/>
+<pad name="2" x="1.27" y="0" drill="1.016" shape="long" rot="R90"/>
+<text x="-2.6162" y="1.8288" size="1.27" layer="25" ratio="10">&gt;NAME</text>
+<text x="-2.54" y="-3.175" size="1.27" layer="27">&gt;VALUE</text>
+<rectangle x1="-1.524" y1="-0.254" x2="-1.016" y2="0.254" layer="51"/>
+<rectangle x1="1.016" y1="-0.254" x2="1.524" y2="0.254" layer="51"/>
+</package>
+</packages>
+<packages3d>
+<package3d name="1X02" urn="urn:adsk.eagle:package:22435/2" type="model" library_version="2">
+<description>PIN HEADER</description>
+</package3d>
+</packages3d>
+</library>
 </libraries>
 <attributes>
 </attributes>
@@ -1622,7 +1657,7 @@ Source: http://www.ledtronics.com/ds/smd-0603/Dstr0093.pdf</description>
 <clearance class="1" value="0.254"/>
 </class>
 </classes>
-<designrules name="LaenPCBOrder">
+<designrules name="default">
 <description language="de">&lt;b&gt;EAGLE Design Rules&lt;/b&gt;
 &lt;p&gt;
 Die Standard-Design-Rules sind so gewählt, dass sie für 
@@ -1630,12 +1665,16 @@ die meisten Anwendungen passen. Sollte ihre Platine
 besondere Anforderungen haben, treffen Sie die erforderlichen
 Einstellungen hier und speichern die Design Rules unter 
 einem neuen Namen ab.</description>
-<description language="en">&lt;b&gt;Laen's PCB Order Design Rules&lt;/b&gt;
+<description language="en">&lt;b&gt;EAGLE Design Rules&lt;/b&gt;
 &lt;p&gt;
-Please make sure your boards conform to these design rules.</description>
+The default Design Rules have been set to cover
+a wide range of applications. Your particular design
+may have different requirements, so please make the
+necessary adjustments and save your customized
+design rules under a new name.</description>
 <param name="layerSetup" value="(1*16)"/>
-<param name="mtCopper" value="0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm 0.0356mm"/>
-<param name="mtIsolate" value="1.5011mm 0.1499mm 0.2007mm 0.1499mm 0.2007mm 0.1499mm 0.2007mm 0.1499mm 0.2007mm 0.1499mm 0.2007mm 0.1499mm 0.2007mm 0.1499mm 0.2007mm"/>
+<param name="mtCopper" value="0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm 0.035mm"/>
+<param name="mtIsolate" value="1.5mm 0.15mm 0.2mm 0.15mm 0.2mm 0.15mm 0.2mm 0.15mm 0.2mm 0.15mm 0.2mm 0.15mm 0.2mm 0.15mm 0.2mm"/>
 <param name="mdWireWire" value="6mil"/>
 <param name="mdWirePad" value="6mil"/>
 <param name="mdWireVia" value="6mil"/>
@@ -1645,14 +1684,14 @@ Please make sure your boards conform to these design rules.</description>
 <param name="mdSmdPad" value="6mil"/>
 <param name="mdSmdVia" value="6mil"/>
 <param name="mdSmdSmd" value="6mil"/>
-<param name="mdViaViaSameLayer" value="8mil"/>
+<param name="mdViaViaSameLayer" value="6mil"/>
 <param name="mnLayersViaInSmd" value="2"/>
-<param name="mdCopperDimension" value="15mil"/>
+<param name="mdCopperDimension" value="40mil"/>
 <param name="mdDrill" value="6mil"/>
 <param name="mdSmdStop" value="0mil"/>
 <param name="msWidth" value="6mil"/>
-<param name="msDrill" value="13mil"/>
-<param name="msMicroVia" value="13mil"/>
+<param name="msDrill" value="0.35mm"/>
+<param name="msMicroVia" value="9.99mm"/>
 <param name="msBlindViaRatio" value="0.5"/>
 <param name="rvPadTop" value="0.25"/>
 <param name="rvPadInner" value="0.25"/>
@@ -1661,15 +1700,15 @@ Please make sure your boards conform to these design rules.</description>
 <param name="rvViaInner" value="0.25"/>
 <param name="rvMicroViaOuter" value="0.25"/>
 <param name="rvMicroViaInner" value="0.25"/>
-<param name="rlMinPadTop" value="7mil"/>
+<param name="rlMinPadTop" value="10mil"/>
 <param name="rlMaxPadTop" value="20mil"/>
-<param name="rlMinPadInner" value="7mil"/>
+<param name="rlMinPadInner" value="10mil"/>
 <param name="rlMaxPadInner" value="20mil"/>
-<param name="rlMinPadBottom" value="7mil"/>
+<param name="rlMinPadBottom" value="10mil"/>
 <param name="rlMaxPadBottom" value="20mil"/>
-<param name="rlMinViaOuter" value="7mil"/>
+<param name="rlMinViaOuter" value="8mil"/>
 <param name="rlMaxViaOuter" value="20mil"/>
-<param name="rlMinViaInner" value="7mil"/>
+<param name="rlMinViaInner" value="8mil"/>
 <param name="rlMaxViaInner" value="20mil"/>
 <param name="rlMinMicroViaOuter" value="4mil"/>
 <param name="rlMaxMicroViaOuter" value="20mil"/>
@@ -1682,8 +1721,8 @@ Please make sure your boards conform to these design rules.</description>
 <param name="psElongationOffset" value="100"/>
 <param name="mvStopFrame" value="1"/>
 <param name="mvCreamFrame" value="0"/>
-<param name="mlMinStopFrame" value="3mil"/>
-<param name="mlMaxStopFrame" value="3mil"/>
+<param name="mlMinStopFrame" value="4mil"/>
+<param name="mlMaxStopFrame" value="4mil"/>
 <param name="mlMinCreamFrame" value="0mil"/>
 <param name="mlMaxCreamFrame" value="0mil"/>
 <param name="mlViaStopLimit" value="0mil"/>
@@ -1694,6 +1733,7 @@ Please make sure your boards conform to these design rules.</description>
 <param name="slThermalsForVias" value="0"/>
 <param name="dpMaxLengthDifference" value="10mm"/>
 <param name="dpGapFactor" value="2.5"/>
+<param name="checkAngle" value="0"/>
 <param name="checkFont" value="1"/>
 <param name="checkRestrict" value="1"/>
 <param name="checkStop" value="0"/>
@@ -1812,7 +1852,7 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="VALUE" x="60.3758" y="64.2874" size="1.27" layer="27"/>
 </element>
 <element name="R2" library="resistor" library_urn="urn:adsk.eagle:library:348" package="R0805" package3d_urn="urn:adsk.eagle:package:26059/1" value="" x="56.2102" y="64.3128" smashed="yes" rot="R90">
-<attribute name="NAME" x="55.0418" y="63.7794" size="0.8128" layer="25" font="vector" ratio="20" rot="R90"/>
+<attribute name="NAME" x="56.7182" y="67.3862" size="0.8128" layer="25" font="vector" ratio="20" rot="R180"/>
 <attribute name="VALUE" x="58.7502" y="63.6778" size="1.27" layer="27" rot="R90"/>
 </element>
 <element name="U$1" library="Teensy_3_and_LC_Series_Boards_v1.4" package="TEENSY_3.0-3.2&amp;LC_DIL" value="TEENSY_LC" x="89.408" y="51.054" smashed="yes" rot="R180">
@@ -1858,28 +1898,31 @@ Please make sure your boards conform to these design rules.</description>
 </element>
 <element name="SIG_SEL" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" package="1X03" package3d_urn="urn:adsk.eagle:package:38063/1" value="" x="76.6572" y="59.1312" rot="R90"/>
 <element name="PWR_SW" library="SparkFun-Connectors" library_urn="urn:adsk.eagle:library:513" package="1X02" package3d_urn="urn:adsk.eagle:package:38039/1" value="" x="77.3938" y="38.2778" smashed="yes" rot="R270">
-<attribute name="NAME" x="78.9432" y="38.6588" size="0.6096" layer="25" font="vector" ratio="20" rot="R270"/>
+<attribute name="NAME" x="79.0702" y="39.1668" size="0.8128" layer="25" font="vector" ratio="20" rot="R270"/>
 <attribute name="VALUE" x="75.3618" y="39.5478" size="0.6096" layer="27" font="vector" ratio="20" rot="R270"/>
 </element>
 <element name="STATUS" library="led" library_urn="urn:adsk.eagle:library:259" package="SML0805" package3d_urn="urn:adsk.eagle:package:15830/1" value="" x="71.755" y="55.753" smashed="yes">
-<attribute name="NAME" x="71.7296" y="56.8833" size="0.6096" layer="25" font="vector" ratio="20" align="bottom-center"/>
+<attribute name="NAME" x="71.7804" y="56.5785" size="0.8128" layer="25" font="vector" ratio="20" align="bottom-center"/>
 <attribute name="VALUE" x="71.755" y="54.8005" size="0.6096" layer="27" font="vector" ratio="20" align="top-center"/>
 </element>
 <element name="R4" library="resistor" library_urn="urn:adsk.eagle:library:348" package="R0805" package3d_urn="urn:adsk.eagle:package:26059/1" value="" x="76.9366" y="55.626" smashed="yes">
 <attribute name="NAME" x="78.1558" y="53.848" size="0.6096" layer="25" font="vector" ratio="20"/>
 <attribute name="VALUE" x="75.6666" y="53.086" size="1.27" layer="27"/>
 </element>
+<element name="SBUS_5V" library="pinhead" library_urn="urn:adsk.eagle:library:325" package="1X02" package3d_urn="urn:adsk.eagle:package:22435/2" value="" x="77.3684" y="45.8978" smashed="yes" rot="R90">
+<attribute name="NAME" x="79.9084" y="43.307" size="0.8128" layer="25" font="vector" ratio="20" rot="R90"/>
+<attribute name="VALUE" x="80.5434" y="43.3578" size="1.27" layer="27" rot="R90"/>
+</element>
 </elements>
 <signals>
 <signal name="DAC_R">
 <contactref element="U$2" pad="DAC_R"/>
 <contactref element="J1" pad="RING"/>
-<wire x1="55.3212" y1="45.4152" x2="55.3212" y2="44.8056" width="0.3556" layer="16"/>
-<wire x1="54.102" y1="46.6344" x2="55.3212" y2="45.4152" width="0.3556" layer="16"/>
-<wire x1="54.102" y1="60.198" x2="54.102" y2="46.6344" width="0.3556" layer="16"/>
-<wire x1="64.9224" y1="71.0184" x2="54.102" y2="60.198" width="0.3556" layer="16"/>
-<wire x1="55.3212" y1="44.8056" x2="55.372" y2="44.704" width="0.3556" layer="16"/>
 <wire x1="64.9224" y1="71.0184" x2="65.0186" y2="71.0476" width="0.3556" layer="16"/>
+<wire x1="55.372" y1="45.48386875" x2="55.372" y2="44.704" width="0.3048" layer="16"/>
+<wire x1="54.1274" y1="46.72846875" x2="55.372" y2="45.48386875" width="0.3048" layer="16"/>
+<wire x1="65.0186" y1="71.0476" x2="54.1274" y2="60.1564" width="0.3048" layer="16"/>
+<wire x1="54.1274" y1="60.1564" x2="54.1274" y2="46.72846875" width="0.3048" layer="16"/>
 </signal>
 <signal name="DAC_L">
 <contactref element="U$2" pad="DAC_L"/>
@@ -1896,7 +1939,6 @@ Please make sure your boards conform to these design rules.</description>
 <contactref element="U$2" pad="GND_1"/>
 <contactref element="U$1" pad="AGND"/>
 <contactref element="U$1" pad="GND"/>
-<contactref element="R2" pad="1"/>
 <contactref element="Q1" pad="1"/>
 <contactref element="VBAT-" pad="1"/>
 <contactref element="VREG" pad="2"/>
@@ -2020,6 +2062,19 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="90.0684" y1="77.5716" x2="89.154" y2="78.486" width="0.3556" layer="16"/>
 <wire x1="73.7616" y1="77.1144" x2="73.66" y2="76.9874" width="0.3556" layer="16"/>
 <wire x1="90.0684" y1="77.5716" x2="90.17" y2="77.5716" width="0.3556" layer="16"/>
+<contactref element="SBUS_5V" pad="1"/>
+<contactref element="R2" pad="1"/>
+<wire x1="55.0538" y1="66.0811375" x2="55.0538" y2="64.4444625" width="0.3048" layer="1"/>
+<wire x1="63.4275375" y1="67.3354" x2="62.7791375" y2="67.9838" width="0.3048" layer="1"/>
+<wire x1="73.7616" y1="69.3166" x2="71.7804" y2="67.3354" width="0.3048" layer="1"/>
+<wire x1="71.7804" y1="67.3354" x2="63.4275375" y2="67.3354" width="0.3048" layer="1"/>
+<wire x1="62.7791375" y1="67.9838" x2="56.9564625" y2="67.9838" width="0.3048" layer="1"/>
+<wire x1="56.9564625" y1="67.9838" x2="55.0538" y2="66.0811375" width="0.3048" layer="1"/>
+<wire x1="77.3684" y1="44.6278" x2="77.3684" y2="38.3032" width="0.3048" layer="1"/>
+<wire x1="77.3684" y1="38.3032" x2="77.3938" y2="38.2778" width="0.3048" layer="1"/>
+<wire x1="55.0538" y1="64.4444625" x2="55.2918625" y2="64.2064" width="0.3048" layer="1"/>
+<wire x1="55.2918625" y1="64.2064" x2="55.3666" y2="64.2064" width="0.3048" layer="1"/>
+<wire x1="55.3666" y1="64.2064" x2="56.2102" y2="63.3628" width="0.3048" layer="1"/>
 </signal>
 <signal name="PWM1_SIG">
 <contactref element="U$1" pad="3"/>
@@ -2093,28 +2148,16 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="62.484" y1="66.7512" x2="61.9608" y2="66.8274" width="0.3556" layer="1"/>
 <wire x1="66.9036" y1="63.0936" x2="66.929" y2="63.0936" width="0.3556" layer="1"/>
 </signal>
-<signal name="N$17">
-<contactref element="R1" pad="1"/>
-<contactref element="R2" pad="2"/>
-<contactref element="Q1" pad="2"/>
-<wire x1="58.674" y1="65.8368" x2="56.2356" y2="65.8368" width="0.3556" layer="1"/>
-<wire x1="59.5884" y1="66.7512" x2="58.674" y2="65.8368" width="0.3556" layer="1"/>
-<wire x1="56.2356" y1="65.8368" x2="56.2102" y2="65.2628" width="0.3556" layer="1"/>
-<wire x1="59.5884" y1="66.7512" x2="60.0608" y2="66.8274" width="0.3556" layer="1"/>
-<wire x1="60.8076" y1="63.5508" x2="60.8076" y2="60.3504" width="0.3556" layer="1"/>
-<wire x1="58.674" y1="65.6844" x2="60.8076" y2="63.5508" width="0.3556" layer="1"/>
-<wire x1="60.8076" y1="60.3504" x2="60.9092" y2="60.2996" width="0.3556" layer="1"/>
-<wire x1="58.674" y1="65.6844" x2="58.674" y2="65.8368" width="0.3556" layer="1"/>
-</signal>
 <signal name="SBUS_INV_OUT">
-<contactref element="Q1" pad="3"/>
 <contactref element="SIG_SEL" pad="3"/>
-<wire x1="64.1604" y1="62.3316" x2="62.1792" y2="62.3316" width="0.3556" layer="16"/>
-<wire x1="66.294" y1="64.4652" x2="64.1604" y2="62.3316" width="0.3556" layer="16"/>
-<wire x1="76.5048" y1="64.4652" x2="66.294" y2="64.4652" width="0.3556" layer="16"/>
-<wire x1="76.6572" y1="64.3128" x2="76.5048" y2="64.4652" width="0.3556" layer="16"/>
-<wire x1="62.1792" y1="62.3316" x2="62.1792" y2="62.2046" width="0.3556" layer="16"/>
-<wire x1="76.6572" y1="64.3128" x2="76.6572" y2="64.2112" width="0.3556" layer="16"/>
+<contactref element="R2" pad="2"/>
+<contactref element="Q1" pad="3"/>
+<wire x1="72.56661875" y1="64.4398" x2="72.79521875" y2="64.2112" width="0.3048" layer="16"/>
+<wire x1="72.79521875" y1="64.2112" x2="76.6572" y2="64.2112" width="0.3048" layer="16"/>
+<wire x1="62.1792" y1="62.2046" x2="64.4144" y2="64.4398" width="0.3048" layer="16"/>
+<wire x1="64.4144" y1="64.4398" x2="72.56661875" y2="64.4398" width="0.3048" layer="16"/>
+<wire x1="56.2102" y1="65.2628" x2="59.121" y2="65.2628" width="0.3048" layer="1"/>
+<wire x1="59.121" y1="65.2628" x2="62.1792" y2="62.2046" width="0.3048" layer="1"/>
 </signal>
 <signal name="SBUS_OUT">
 <contactref element="SBUS/PPM" pad="1"/>
@@ -2144,6 +2187,34 @@ Please make sure your boards conform to these design rules.</description>
 <contactref element="R4" pad="1"/>
 <wire x1="75.9866" y1="55.626" x2="73.3044" y2="55.626" width="0.3556" layer="1"/>
 <wire x1="73.3044" y1="55.626" x2="72.805" y2="55.753" width="0.3556" layer="1"/>
+</signal>
+<signal name="N$3">
+<contactref element="SBUS_5V" pad="2"/>
+<contactref element="SBUS/PPM" pad="2"/>
+<contactref element="SBUS_INV" pad="2"/>
+<wire x1="73.66753125" y1="51.0286" x2="74.3966" y2="50.29953125" width="0.3048" layer="16"/>
+<wire x1="74.3966" y1="50.29953125" x2="74.3966" y2="50.1396" width="0.3048" layer="16"/>
+<wire x1="74.3966" y1="50.1396" x2="77.3684" y2="47.1678" width="0.3048" layer="16"/>
+<wire x1="69.4436" y1="54.27226875" x2="72.68726875" y2="51.0286" width="0.3048" layer="16"/>
+<wire x1="72.68726875" y1="51.0286" x2="73.66753125" y2="51.0286" width="0.3048" layer="16"/>
+<wire x1="69.469" y1="63.0936" x2="69.4436" y2="63.0682" width="0.3048" layer="16"/>
+<wire x1="69.4436" y1="63.0682" x2="69.4436" y2="60.5536" width="0.3048" layer="16"/>
+<wire x1="69.4436" y1="60.5536" x2="69.4436" y2="54.27226875" width="0.3048" layer="16"/>
+</signal>
+<signal name="N$4">
+<contactref element="R1" pad="1"/>
+<contactref element="Q1" pad="2"/>
+<wire x1="60.0608" y1="66.8274" x2="60.9044" y2="65.9838" width="0.3048" layer="1"/>
+<wire x1="63.1952" y1="62.62544375" x2="63.1952" y2="61.78375625" width="0.3048" layer="1"/>
+<wire x1="63.1952" y1="61.78375625" x2="62.60004375" y2="61.1886" width="0.3048" layer="1"/>
+<wire x1="60.9044" y1="65.9838" x2="60.9044" y2="64.91624375" width="0.3048" layer="1"/>
+<wire x1="60.9044" y1="64.91624375" x2="63.1952" y2="62.62544375" width="0.3048" layer="1"/>
+<wire x1="62.60004375" y1="61.1886" x2="61.7982" y2="61.1886" width="0.3048" layer="1"/>
+<wire x1="61.7982" y1="61.1886" x2="60.9092" y2="60.2996" width="0.3048" layer="1"/>
+</signal>
+<signal name="N$5">
+</signal>
+<signal name="N$6">
 </signal>
 </signals>
 </board>
